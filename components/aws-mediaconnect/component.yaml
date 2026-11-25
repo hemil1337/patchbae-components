@@ -1,0 +1,69 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-mediaconnect
+displayName: AWS Elemental MediaConnect
+summary: Start or stop a MediaConnect flow and return its status and the address to send the contribution feed to.
+version: 1.0.0
+category: live
+tags: [aws, mediaconnect, live, contribution, transport, flow]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 900
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [mediaconnect]
+  policy: iam/policy.json
+
+inputs:
+  - name: flow_arn
+    label: Flow ARN
+    type: string
+    required: true
+    description: ARN of the MediaConnect flow.
+    example: arn:aws:mediaconnect:eu-north-1:123456789012:flow:1-23aBC45dEF67hiJ8-12AbC34DE5fG:stadium-feed
+  - name: action
+    label: Action
+    type: enum
+    options: [start_flow, stop_flow]
+    required: true
+    description: Start the flow so it accepts the contribution feed, or stop it.
+  - name: wait
+    label: Wait until done
+    type: boolean
+    default: true
+    description: Wait until the flow is active or on standby before the node finishes.
+
+outputs:
+  - name: flow_arn
+    type: string
+    description: The flow the action was applied to.
+  - name: flow_name
+    type: string
+    description: The flow's name.
+  - name: status
+    type: string
+    description: The flow's status when the node finished, such as ACTIVE or STANDBY.
+  - name: ingest_ip
+    type: string
+    description: The IP address the contribution encoder sends to. Empty for a source that has none, such as an entitlement.
+  - name: ingest_port
+    type: integer
+    description: The port the contribution encoder sends to. 0 when the source has none.
+  - name: ingest_protocol
+    type: string
+    description: The source's transport protocol, such as srt-listener or zixi-push.
+  - name: egress_ip
+    type: string
+    description: The IP address the flow's outputs are sent from.

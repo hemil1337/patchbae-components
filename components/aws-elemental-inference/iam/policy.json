@@ -1,0 +1,39 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CreateAndFindFeeds",
+      "Effect": "Allow",
+      "Action": ["elemental-inference:CreateFeed", "elemental-inference:TagResource", "elemental-inference:ListFeeds"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ReadAndChangeFeeds",
+      "Effect": "Allow",
+      "Action": [
+        "elemental-inference:GetFeed",
+        "elemental-inference:UpdateFeed",
+        "elemental-inference:ListScheduleActions",
+        "elemental-inference:CreateScheduleAction"
+      ],
+      "Resource": "arn:aws:elemental-inference:<REGION>:<ACCOUNT_ID>:feed/*"
+    },
+    {
+      "Sid": "FindFixtures",
+      "Effect": "Allow",
+      "Action": ["elemental-inference:SearchFixtures"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "PassTheAccessRoleToElementalInference",
+      "Effect": "Allow",
+      "Action": ["iam:PassRole"],
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/<ACCESS_ROLE_NAME>",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "elemental-inference.amazonaws.com"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Amazon Kinesis Video Streams">
+  <rect width="64" height="64" rx="14" fill="#6D28D9"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="10" y="22" width="28" height="20" rx="4"/>
+    <path d="M38 29l14-7v20l-14-7"/>
+    <path d="M17 50h30"/>
+  </g>
+</svg>

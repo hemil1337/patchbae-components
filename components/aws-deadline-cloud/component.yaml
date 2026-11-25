@@ -1,0 +1,108 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-deadline-cloud
+displayName: AWS Deadline Cloud
+summary: Submit a render job to an AWS Deadline Cloud queue from an Open Job Description template, and wait for it.
+version: 1.0.0
+category: render
+tags: [aws, deadline-cloud, render, vfx, graphics, open-job-description]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.44.9
+  timeoutSeconds: 21600
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [deadline, s3]
+  policy: iam/policy.json
+
+inputs:
+  - name: farm_id
+    label: Farm
+    type: string
+    required: true
+    description: ID of the Deadline Cloud farm, farm- followed by 32 characters.
+    example: farm-0123456789abcdef0123456789abcdef
+  - name: queue_id
+    label: Queue
+    type: string
+    required: true
+    description: ID of the queue to submit to, queue- followed by 32 characters.
+    example: queue-0123456789abcdef0123456789abcdef
+  - name: template_uri
+    label: Job template file
+    type: s3_uri
+    description: An Open Job Description job template on S3, as .json, .yaml or .yml. Give this or an inline template.
+    example: s3://acme-graphics/templates/promo-endboard.yaml
+  - name: template
+    label: Job template
+    type: text
+    description: An Open Job Description job template, inline, as JSON or YAML. Give this or a template file.
+  - name: parameters
+    label: Job parameters
+    type: json
+    description: 'Values for the template''s parameters, by name. A path parameter is written as {"path": "..."}.'
+    example: '{"Frames": "1-250", "Scene": {"path": "s3://acme-graphics/scenes/promo.blend"}}'
+  - name: priority
+    label: Priority
+    type: integer
+    default: 50
+    description: The job's priority in the queue, 0 to 100. Higher runs first.
+  - name: name
+    label: Job name
+    type: string
+    description: Name for the job. Leave empty for the name in the template.
+  - name: max_failed_tasks
+    label: Failed tasks allowed
+    type: integer
+    description: The job fails once this many tasks have failed. Leave empty for the queue's default.
+  - name: max_retries_per_task
+    label: Retries per task
+    type: integer
+    description: How often a failed task is tried again. Leave empty for the queue's default.
+  - name: max_workers
+    label: Most workers
+    type: integer
+    description: The most workers that may work on the job at once. Leave empty for no limit.
+  - name: storage_profile_id
+    label: Storage profile
+    type: string
+    description: ID of the storage profile that maps the job's paths, sp- followed by 32 characters. Leave empty for none.
+  - name: wait
+    label: Wait until done
+    type: boolean
+    default: true
+    description: Wait until every task of the job has finished. Switch off to submit and move on.
+
+outputs:
+  - name: job_id
+    type: string
+    description: The job's ID.
+  - name: job_name
+    type: string
+    description: The job's name.
+  - name: lifecycle_status
+    type: string
+    description: Where the job is in its life cycle, such as CREATE_COMPLETE.
+  - name: task_run_status
+    type: string
+    description: The status of the job's tasks. SUCCEEDED when the node waited and succeeded.
+  - name: task_counts
+    type: json
+    description: 'How many tasks are in each status, such as {"SUCCEEDED": 250}.'
+  - name: started_at
+    type: string
+    description: When the first task started, as a UTC time. Empty until then.
+  - name: ended_at
+    type: string
+    description: When the last task finished, as a UTC time. Empty until then.

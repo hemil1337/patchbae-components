@@ -1,0 +1,26 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CreateChannels",
+      "Effect": "Allow",
+      "Action": ["ivs:CreateChannel", "ivs:TagResource"],
+      "Resource": [
+        "arn:aws:ivs:<REGION>:<ACCOUNT_ID>:channel/*",
+        "arn:aws:ivs:<REGION>:<ACCOUNT_ID>:stream-key/*"
+      ]
+    },
+    {
+      "Sid": "FindAndReadChannels",
+      "Effect": "Allow",
+      "Action": ["ivs:ListChannels", "ivs:GetChannel", "ivs:ListStreamKeys"],
+      "Resource": "arn:aws:ivs:<REGION>:<ACCOUNT_ID>:channel/*"
+    },
+    {
+      "Sid": "ReadStopAndAnnotateStreams",
+      "Effect": "Allow",
+      "Action": ["ivs:GetStream", "ivs:StopStream", "ivs:PutMetadata"],
+      "Resource": "arn:aws:ivs:<REGION>:<ACCOUNT_ID>:channel/*"
+    }
+  ]
+}

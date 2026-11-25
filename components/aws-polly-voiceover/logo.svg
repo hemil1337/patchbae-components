@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Amazon Polly Voice-over">
+  <rect width="64" height="64" rx="14" fill="#B8501F"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 21h18v16H21l-5 5v-5h-4z"/>
+    <path d="M18 29h6"/>
+    <path d="M38 27v10"/>
+    <path d="M45 20v24"/>
+    <path d="M52 25v14"/>
+  </g>
+</svg>

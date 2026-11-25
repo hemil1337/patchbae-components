@@ -1,0 +1,72 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-translate-subtitles
+displayName: Amazon Translate Subtitles
+summary: Translate an SRT or WebVTT subtitle file on S3 into one or more languages, keeping every cue's number and timing.
+version: 1.0.0
+category: language
+tags: [aws, translate, subtitles, captions, localization]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 1800
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [translate, comprehend, s3]
+  policy: iam/policy.json
+
+inputs:
+  - name: subtitle_uri
+    label: Subtitle file
+    type: s3_uri
+    required: true
+    description: The .srt or .vtt file to translate. It must be UTF-8 text.
+    example: s3://acme-media-work/transcripts/show.srt
+  - name: target_languages
+    label: Translate to
+    type: list
+    required: true
+    description: The languages to translate to, as Amazon Translate language codes. One file is written per language.
+    example: [sv, de, fr]
+  - name: source_language
+    label: Source language
+    type: string
+    default: auto
+    description: The language code of the subtitles, such as en, or "auto" to let Amazon Translate identify it.
+  - name: output_uri
+    label: Output folder
+    type: s3_uri
+    required: true
+    description: Folder the translated files are written to. Must end with a slash.
+    example: s3://acme-media-work/subtitles/
+  - name: formality
+    label: Formality
+    type: enum
+    options: [none, formal, informal]
+    default: none
+    description: Ask for formal or informal wording. Amazon Translate supports this for some target languages only.
+
+outputs:
+  - name: subtitle_uris
+    type: json
+    description: 'One S3 URI per language, for example {"sv": "s3://…/show.sv.srt", "de": "s3://…/show.de.srt"}.'
+  - name: cue_count
+    type: integer
+    description: The number of cues in the subtitle file.
+  - name: source_language
+    type: string
+    description: The source language, as Amazon Translate reported it.
+  - name: format
+    type: string
+    description: The subtitle format, srt or vtt. The translated files have the same format.

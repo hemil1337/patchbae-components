@@ -1,0 +1,144 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-elemental-inference
+displayName: AWS Elemental Inference
+summary: Create a live AI feed for vertical crops, clips, subtitles or metadata, switch its outputs, or find a sports fixture.
+version: 1.0.0
+category: live
+tags: [aws, elemental-inference, live, ai, vertical-video, clips, subtitles, sports]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.44.9
+  timeoutSeconds: 900
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [elemental-inference]
+  policy: iam/policy.json
+
+inputs:
+  - name: action
+    label: Action
+    type: enum
+    options: [create_feed, set_output_status, find_fixture]
+    required: true
+    description: Create a feed, switch one of a feed's outputs on or off, or find the sports fixture a clips output should follow.
+  - name: feed_name
+    label: Feed name
+    type: string
+    description: For create_feed. Letters, digits, dashes and underscores. A feed with this name is reused.
+    example: cup-final-2026
+  - name: features
+    label: Features
+    type: list
+    description: For create_feed. What the feed produces. Any of smart_crop, clips, subtitles, contextual_metadata.
+    example: [smart_crop, clips]
+  - name: subtitle_language
+    label: Subtitle language
+    type: enum
+    options: [eng, eng-au, eng-gb, eng-us, fra, ita, deu, spa, por, ara]
+    default: eng
+    description: For create_feed with subtitles. The language spoken in the stream.
+  - name: fixture_id
+    label: Fixture
+    type: string
+    description: For create_feed with clips. The sports fixture whose events the clips follow. Use find_fixture to look it up.
+    example: "{{nodes.find_fixture.data.fixture_id}}"
+  - name: crop_template_uris
+    label: Crop templates
+    type: list
+    description: For create_feed with smart_crop. Optional graphics templates on S3 that are laid over the cropped video. Needs an access role.
+  - name: access_role_arn
+    label: Access role
+    type: string
+    description: For create_feed. ARN of the IAM role Elemental Inference assumes to read the crop templates. An ARN, not a credential.
+    example: arn:aws:iam::123456789012:role/ElementalInferenceAccessRole
+  - name: feed_id
+    label: Feed ID
+    type: string
+    description: For set_output_status. ID of the feed.
+    example: "{{nodes.create_feed.data.feed_id}}"
+  - name: output_name
+    label: Output
+    type: string
+    description: For set_output_status. Name of the feed output to switch. Feeds made by this component name them crop, clips, subtitles and metadata.
+    example: clips
+  - name: enabled
+    label: Enabled
+    type: boolean
+    default: true
+    description: For set_output_status. Switch the output on (true) or off (false).
+  - name: at
+    label: At
+    type: string
+    description: For set_output_status. When to switch, as a UTC time such as 2026-11-25T19:00:00Z. Leave empty for now.
+  - name: sport
+    label: Sport
+    type: enum
+    options: [basketball, american-football]
+    description: For find_fixture. The sport to search.
+  - name: date
+    label: Date
+    type: string
+    description: For find_fixture. The day the fixture is played, in UTC, as YYYY-MM-DD.
+    example: "2026-11-25"
+  - name: end_date
+    label: Last date
+    type: string
+    description: For find_fixture. Last day of the search, as YYYY-MM-DD. Leave empty to search one day.
+  - name: competitors
+    label: Competitors
+    type: list
+    description: For find_fixture. Team names to narrow the search. A fixture matches when one of them plays.
+    example: [Northlight Lions]
+
+outputs:
+  - name: feed_id
+    type: string
+    description: The feed's ID (create_feed and set_output_status).
+  - name: feed_arn
+    type: string
+    description: The feed's ARN, to give to the MediaLive channel that sends the stream (create_feed).
+  - name: feed_status
+    type: string
+    description: The feed's status, AVAILABLE until a channel is associated and ACTIVE after (create_feed).
+  - name: data_endpoints
+    type: list
+    description: The feed's data endpoints (create_feed).
+  - name: output_names
+    type: list
+    description: The names of the feed's outputs (create_feed).
+  - name: output_name
+    type: string
+    description: The output that was switched (set_output_status).
+  - name: output_status
+    type: string
+    description: ENABLED or DISABLED, the status the output has or will get (set_output_status).
+  - name: action_name
+    type: string
+    description: The schedule action that was added when a time is set (set_output_status).
+  - name: scheduled_at
+    type: string
+    description: When the output switches, as a UTC time, or "now" (set_output_status).
+  - name: fixture_id
+    type: string
+    description: The first fixture that matched (find_fixture).
+  - name: fixture_name
+    type: string
+    description: That fixture's name (find_fixture).
+  - name: fixture_count
+    type: integer
+    description: How many fixtures matched (find_fixture).
+  - name: fixtures
+    type: json
+    description: 'Every match, earliest first, as a list of {"fixture_id", "name", "group", "scheduled_start", "status", "competitors"} (find_fixture).'

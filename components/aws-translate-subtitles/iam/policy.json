@@ -1,0 +1,29 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "TranslateSubtitles",
+      "Effect": "Allow",
+      "Action": ["translate:TranslateDocument"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "IdentifySourceLanguage",
+      "Effect": "Allow",
+      "Action": ["comprehend:DetectDominantLanguage"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ReadSubtitles",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::<SUBTITLE_BUCKET>/*"
+    },
+    {
+      "Sid": "WriteTranslatedSubtitles",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject"],
+      "Resource": "arn:aws:s3:::<OUTPUT_BUCKET>/<OUTPUT_PREFIX>*"
+    }
+  ]
+}

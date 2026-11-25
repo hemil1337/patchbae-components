@@ -1,0 +1,123 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-mediatailor
+displayName: AWS Elemental MediaTailor
+summary: Set up ad insertion for a stream and get its playback URLs, or schedule a VOD source as a program on a channel.
+version: 1.0.0
+category: delivery
+tags: [aws, mediatailor, ads, ssai, channel-assembly, playout, monetization]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 300
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [mediatailor]
+  policy: iam/policy.json
+
+inputs:
+  - name: action
+    label: Action
+    type: enum
+    options: [configure_ad_insertion, schedule_program]
+    required: true
+    description: Set up server-side ad insertion for a stream, or schedule a VOD source as a program on a channel-assembly channel.
+  - name: configuration_name
+    label: Configuration name
+    type: string
+    description: For configure_ad_insertion. Name of the playback configuration. One with this name is replaced.
+    example: cup-final-catchup
+  - name: content_source_url
+    label: Content origin
+    type: string
+    description: For configure_ad_insertion. URL prefix of the stream's origin, without the manifest's file name.
+    example: https://a1b2c3.egress.mediapackage-vod.eu-north-1.amazonaws.com/out/v1/0f1e2d
+  - name: ad_decision_server_url
+    label: Ad decision server
+    type: string
+    description: For configure_ad_insertion. URL of the ad decision server (VAST or VMAP), with any player variables it needs.
+    example: https://ads.example.com/vast?duration=[session.avail_duration_secs]
+  - name: slate_ad_url
+    label: Slate
+    type: string
+    description: For configure_ad_insertion. URL of an MP4 shown when an ad break is not filled. Leave empty for none.
+  - name: manifest_path
+    label: Manifest path
+    type: string
+    description: For configure_ad_insertion. Path of the HLS manifest below the content origin. When set, the node returns the complete playback URL.
+    example: index.m3u8
+  - name: channel_name
+    label: Channel
+    type: string
+    description: For schedule_program. Name of the channel-assembly channel.
+    example: northlight-one
+  - name: source_location_name
+    label: Source location
+    type: string
+    description: For schedule_program. Name of the source location that holds the VOD source.
+    example: northlight-playout
+  - name: vod_source_name
+    label: VOD source
+    type: string
+    description: For schedule_program. Name of the VOD source to play.
+    example: promo-winter-2026
+  - name: program_name
+    label: Program name
+    type: string
+    description: For schedule_program. Name for the program. Leave empty for one named after the task. A program with this name is reused.
+  - name: start_time
+    label: Start time
+    type: string
+    description: For schedule_program. A UTC time such as 2026-11-25T19:30:00Z, for channels in linear mode. Leave empty to place the program relative to the schedule.
+  - name: relative_position
+    label: Position
+    type: enum
+    options: [AFTER_PROGRAM, BEFORE_PROGRAM]
+    default: AFTER_PROGRAM
+    description: For schedule_program without a start time. Put the program after or before the relative program.
+  - name: relative_program
+    label: Relative program
+    type: string
+    description: For schedule_program without a start time. The program to place this one next to. Leave empty for the end of the schedule.
+  - name: ad_break_offsets
+    label: Ad breaks
+    type: list
+    description: For schedule_program. Where ad breaks go, in seconds from the start of the program.
+    example: [0, 600]
+
+outputs:
+  - name: playback_configuration_arn
+    type: string
+    description: The playback configuration's ARN (configure_ad_insertion).
+  - name: hls_playback_prefix
+    type: string
+    description: The URL prefix HLS players use; add the manifest's path to it (configure_ad_insertion).
+  - name: dash_playback_prefix
+    type: string
+    description: The URL prefix DASH players use (configure_ad_insertion).
+  - name: session_initialization_prefix
+    type: string
+    description: The URL prefix for starting sessions with client-side reporting (configure_ad_insertion).
+  - name: playback_url
+    type: string
+    description: The complete HLS playback URL, when a manifest path is set (configure_ad_insertion).
+  - name: program_name
+    type: string
+    description: The program's name (schedule_program).
+  - name: program_arn
+    type: string
+    description: The program's ARN (schedule_program).
+  - name: scheduled_start_time
+    type: string
+    description: When the program is scheduled to start, as a UTC time, when MediaTailor reports it (schedule_program).

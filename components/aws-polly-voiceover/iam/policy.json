@@ -1,0 +1,32 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RunSpeechSynthesisTasks",
+      "Effect": "Allow",
+      "Action": [
+        "polly:StartSpeechSynthesisTask",
+        "polly:GetSpeechSynthesisTask"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "WriteAudio",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject"],
+      "Resource": "arn:aws:s3:::<OUTPUT_BUCKET>/<OUTPUT_PREFIX>*"
+    },
+    {
+      "Sid": "FindAudioAlreadyWritten",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::<OUTPUT_BUCKET>"
+    },
+    {
+      "Sid": "ReadTextFile",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::<TEXT_BUCKET>/*"
+    }
+  ]
+}

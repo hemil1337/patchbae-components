@@ -1,0 +1,114 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-kinesis-video-streams
+displayName: Amazon Kinesis Video Streams
+summary: Export a time range of a Kinesis video stream to S3 as an MP4 clip, or as still images.
+version: 1.0.0
+category: ingest
+tags: [aws, kinesis-video, camera, clip, export, stills, thumbnails]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 1800
+  resources:
+    cpu: 500m
+    memory: 512Mi
+
+aws:
+  services: [kinesisvideo, s3]
+  policy: iam/policy.json
+
+inputs:
+  - name: stream_name
+    label: Stream
+    type: string
+    required: true
+    description: Name of the Kinesis video stream.
+    example: stadium-cam-north
+  - name: action
+    label: Action
+    type: enum
+    options: [export_clip, extract_images]
+    required: true
+    description: Export the time range as one MP4 clip, or as still images taken at a regular interval.
+  - name: start_time
+    label: Start time
+    type: string
+    required: true
+    description: Start of the range, as a UTC time such as 2026-11-25T19:42:10Z.
+    example: "2026-11-25T19:42:10Z"
+  - name: end_time
+    label: End time
+    type: string
+    required: true
+    description: End of the range, as a UTC time. At most 24 hours after the start for a clip and 300 seconds for images.
+    example: "2026-11-25T19:43:10Z"
+  - name: output_uri
+    label: Output folder
+    type: s3_uri
+    required: true
+    description: Folder the clip or the images are written to. Must end with a slash.
+    example: s3://acme-media-work/camera-clips/
+  - name: file_name
+    label: File name
+    type: string
+    description: Name of the clip, without extension, or of the folder the images go in. Leave empty for one named after the task.
+    example: goal-63min
+  - name: timestamp_type
+    label: Timestamps
+    type: enum
+    options: [PRODUCER_TIMESTAMP, SERVER_TIMESTAMP]
+    default: PRODUCER_TIMESTAMP
+    description: Whether the range is in the camera's time (producer) or the time Kinesis received the media (server).
+  - name: image_format
+    label: Image format
+    type: enum
+    options: [JPEG, PNG]
+    default: JPEG
+    description: For extract_images. The format of the still images.
+  - name: sampling_interval_seconds
+    label: Seconds between images
+    type: number
+    default: 5
+    description: For extract_images. One image is taken every this many seconds. At least 0.2.
+  - name: max_images
+    label: Most images
+    type: integer
+    default: 100
+    description: For extract_images. Stop after this many images. 1 to 1000.
+  - name: image_width
+    label: Image width
+    type: integer
+    description: For extract_images. Width in pixels, 1 to 3840. Set it together with the height, or leave both empty for the stream's own size.
+  - name: image_height
+    label: Image height
+    type: integer
+    description: For extract_images. Height in pixels, 1 to 2160. Set it together with the width.
+
+outputs:
+  - name: clip_uri
+    type: s3_uri
+    description: The MP4 clip (export_clip).
+  - name: clip_bytes
+    type: integer
+    description: The size of the clip in bytes (export_clip).
+  - name: images_uri
+    type: s3_uri
+    description: The folder the images were written to (extract_images).
+  - name: image_uris
+    type: list
+    description: The images, in time order, as S3 URIs (extract_images).
+  - name: image_count
+    type: integer
+    description: How many images were written (extract_images).
+  - name: skipped_count
+    type: integer
+    description: How many sampling points had no usable media and were skipped (extract_images).

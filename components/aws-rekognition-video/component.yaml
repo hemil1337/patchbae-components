@@ -1,0 +1,76 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-rekognition-video
+displayName: Amazon Rekognition Video
+summary: Find labels, unsafe content and shot changes in a video on S3 with Amazon Rekognition Video.
+version: 1.0.0
+category: vision
+tags: [aws, rekognition, labels, moderation, shots, video-analysis]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 14400
+  resources:
+    cpu: 250m
+    # Above the usual 256Mi: the complete results of a video that runs for hours are held as text before they are written to S3.
+    memory: 512Mi
+
+aws:
+  services: [rekognition, s3]
+  policy: iam/policy.json
+
+inputs:
+  - name: media_uri
+    label: Video file
+    type: s3_uri
+    required: true
+    description: The video to analyse, MP4 or MOV with H.264 video. Rekognition reads it straight from S3.
+    example: "{{assets.Proxy.locator}}"
+  - name: analyses
+    label: Analyses
+    type: list
+    default: [labels, moderation]
+    description: What to look for. Any of labels, moderation, shots. Each one is billed separately.
+  - name: min_confidence
+    label: Minimum confidence
+    type: number
+    default: 80
+    description: Labels and moderation labels below this confidence, 0 to 100, are left out.
+  - name: output_uri
+    label: Results folder
+    type: s3_uri
+    description: Optional folder. When set, the complete results are written there as one JSON file. Must end with a slash.
+    example: s3://acme-media-work/analysis/
+  - name: max_items
+    label: Labels to list
+    type: integer
+    default: 50
+    description: How many labels and moderation labels the node output lists, most confident first. 1 to 1000.
+
+outputs:
+  - name: labels
+    type: json
+    description: 'What was seen, most confident first, as a list of {"name", "confidence", "timestamp_ms"} with the first time each label appears.'
+  - name: moderation_labels
+    type: json
+    description: Unsafe or sensitive content that was found, in the same shape as labels.
+  - name: flagged
+    type: boolean
+    description: True when any moderation label is at or above the minimum confidence.
+  - name: shot_count
+    type: integer
+    description: The number of shots in the video.
+  - name: shots
+    type: json
+    description: 'The shots in order, as a list of {"start_ms", "end_ms"}. At most the first 1,000.'
+  - name: results_uri
+    type: s3_uri
+    description: The JSON file with the complete results (only when a results folder is set).

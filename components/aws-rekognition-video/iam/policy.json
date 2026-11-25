@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RunVideoAnalyses",
+      "Effect": "Allow",
+      "Action": [
+        "rekognition:StartLabelDetection",
+        "rekognition:GetLabelDetection",
+        "rekognition:StartContentModeration",
+        "rekognition:GetContentModeration",
+        "rekognition:StartSegmentDetection",
+        "rekognition:GetSegmentDetection"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ReadMedia",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::<MEDIA_BUCKET>/*"
+    },
+    {
+      "Sid": "WriteResults",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject"],
+      "Resource": "arn:aws:s3:::<OUTPUT_BUCKET>/<OUTPUT_PREFIX>*"
+    }
+  ]
+}

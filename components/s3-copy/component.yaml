@@ -1,0 +1,74 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: s3-copy
+displayName: S3 Copy
+summary: Copy or move a file or a whole folder between S3 buckets without the bytes passing through Patchbae.
+version: 1.0.0
+category: storage
+tags: [aws, s3, copy, move, archive, storage-class]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 14400
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [s3]
+  policy: iam/policy.json
+
+inputs:
+  - name: source_uri
+    label: Source
+    type: s3_uri
+    required: true
+    description: The object to copy, or a folder ending with a slash to copy everything under it.
+    example: "{{assets.Original.locator}}"
+  - name: destination_uri
+    label: Destination
+    type: s3_uri
+    required: true
+    description: Where to copy to. For one object, a full key or a folder ending with a slash, which keeps the file name. For a folder, a folder.
+    example: s3://acme-media-archive/2026/
+  - name: move
+    label: Move instead of copy
+    type: boolean
+    default: false
+    description: Delete the source after its copy has been checked.
+  - name: storage_class
+    label: Storage class
+    type: enum
+    options: [STANDARD, STANDARD_IA, ONEZONE_IA, INTELLIGENT_TIERING, GLACIER_IR, GLACIER, DEEP_ARCHIVE]
+    default: STANDARD
+    description: The storage class the copies are written in.
+  - name: max_objects
+    label: Maximum objects
+    type: integer
+    default: 1000
+    description: The most objects a folder may hold. A folder with more fails before anything is copied.
+
+outputs:
+  - name: destination_uri
+    type: s3_uri
+    description: The copied object, or the destination folder when a folder was copied.
+  - name: copied
+    type: integer
+    description: The number of objects copied.
+  - name: bytes
+    type: integer
+    description: The total size of the copied objects in bytes.
+  - name: moved
+    type: boolean
+    description: True when the sources were deleted after copying.
+  - name: objects
+    type: list
+    description: The S3 URIs of the copies. At most the first 100.

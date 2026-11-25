@@ -1,0 +1,29 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SubmitAndFollowJobsOnTheQueue",
+      "Effect": "Allow",
+      "Action": ["deadline:CreateJob", "deadline:GetJob"],
+      "Resource": [
+        "arn:aws:deadline:<REGION>:<ACCOUNT_ID>:farm/<FARM_ID>/queue/<QUEUE_ID>",
+        "arn:aws:deadline:<REGION>:<ACCOUNT_ID>:farm/<FARM_ID>/queue/<QUEUE_ID>/job/*"
+      ]
+    },
+    {
+      "Sid": "FindTheJobOfAnEarlierDelivery",
+      "Effect": "Allow",
+      "Action": ["deadline:SearchJobs"],
+      "Resource": [
+        "arn:aws:deadline:<REGION>:<ACCOUNT_ID>:farm/<FARM_ID>",
+        "arn:aws:deadline:<REGION>:<ACCOUNT_ID>:farm/<FARM_ID>/queue/<QUEUE_ID>"
+      ]
+    },
+    {
+      "Sid": "ReadJobTemplates",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::<TEMPLATE_BUCKET>/<TEMPLATE_PREFIX>*"
+    }
+  ]
+}

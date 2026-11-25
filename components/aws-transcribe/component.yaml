@@ -1,0 +1,95 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-transcribe
+displayName: Amazon Transcribe
+summary: Turn the speech in an audio or video file on S3 into a transcript and subtitles.
+version: 1.0.0
+category: speech
+tags: [aws, transcribe, speech-to-text, subtitles, captions]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 14400
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [transcribe, s3]
+  policy: iam/policy.json
+
+inputs:
+  - name: media_uri
+    label: Media file
+    type: s3_uri
+    required: true
+    description: The audio or video file to transcribe. Transcribe reads it straight from S3.
+    example: "{{assets.Original.locator}}"
+  - name: output_uri
+    label: Output folder
+    type: s3_uri
+    required: true
+    description: Folder the transcript and subtitle files are written to. Must end with a slash.
+    example: s3://acme-media-work/transcripts/
+  - name: language_code
+    label: Language
+    type: string
+    default: auto
+    description: A language code such as en-US or sv-SE, or "auto" to let Transcribe identify it.
+  - name: language_options
+    label: Candidate languages
+    type: list
+    description: With "auto", limit identification to these language codes. Two or more make it faster and more accurate.
+    example: [en-US, sv-SE]
+  - name: subtitle_formats
+    label: Subtitle formats
+    type: list
+    default: [srt, vtt]
+    description: Subtitle files to produce next to the transcript. Any of srt, vtt. Leave empty for none.
+  - name: speaker_labels
+    label: Identify speakers
+    type: boolean
+    default: false
+    description: Label who speaks when (speaker diarization).
+  - name: max_speakers
+    label: Maximum speakers
+    type: integer
+    default: 4
+    description: Upper bound on the number of speakers, 2 to 30. Used only when speakers are identified.
+  - name: vocabulary_name
+    label: Custom vocabulary
+    type: string
+    description: Name of a custom vocabulary in the same region, for names and terms Transcribe gets wrong.
+  - name: include_text
+    label: Return the transcript text
+    type: boolean
+    default: true
+    description: Put the plain transcript text in the node output, so a later node or agent can read it without opening the file.
+
+outputs:
+  - name: transcript_uri
+    type: s3_uri
+    description: The transcript JSON (words, timings, confidence).
+  - name: subtitle_uris
+    type: json
+    description: 'One S3 URI per subtitle format, for example {"srt": "s3://…", "vtt": "s3://…"}.'
+  - name: language_code
+    type: string
+    description: The language the file was transcribed in.
+  - name: text
+    type: text
+    description: The plain transcript text (only when "Return the transcript text" is on; cut at 200,000 characters).
+  - name: text_truncated
+    type: boolean
+    description: True when the text was cut.
+  - name: job_name
+    type: string
+    description: The Transcribe job, for looking it up in the AWS console.

@@ -1,0 +1,26 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "InvokeTheModel",
+      "Effect": "Allow",
+      "Action": ["bedrock:InvokeModel"],
+      "Resource": [
+        "arn:aws:bedrock:<REGION>::foundation-model/<MODEL_ID>",
+        "arn:aws:bedrock:<REGION>:<ACCOUNT_ID>:inference-profile/<INFERENCE_PROFILE_ID>"
+      ]
+    },
+    {
+      "Sid": "ReadTranscripts",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::<TRANSCRIPT_BUCKET>/*"
+    },
+    {
+      "Sid": "WriteMetadata",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject"],
+      "Resource": "arn:aws:s3:::<OUTPUT_BUCKET>/<OUTPUT_PREFIX>*"
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-ivs
+displayName: Amazon IVS
+summary: Create an Amazon IVS channel, read or stop its live stream, or send timed metadata to viewers.
+version: 1.0.0
+category: live
+tags: [aws, ivs, live, streaming, low-latency, timed-metadata]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 300
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [ivs]
+  policy: iam/policy.json
+
+inputs:
+  - name: action
+    label: Action
+    type: enum
+    options: [create_channel, get_stream, stop_stream, put_metadata]
+    required: true
+    description: Create a channel, read the status of its live stream, stop the stream, or send timed metadata to viewers.
+  - name: channel_name
+    label: Channel name
+    type: string
+    description: For create_channel. Letters, digits, dashes and underscores, at most 128 characters. A channel with this name is reused.
+    example: friday-night-live
+  - name: channel_arn
+    label: Channel ARN
+    type: string
+    description: For get_stream, stop_stream and put_metadata. ARN of the channel.
+    example: arn:aws:ivs:eu-west-1:123456789012:channel/abcdABCDefgh
+  - name: latency_mode
+    label: Latency
+    type: enum
+    options: [LOW, NORMAL]
+    default: LOW
+    description: For create_channel. LOW for near real-time viewing, NORMAL for broadcast-style delivery.
+  - name: channel_type
+    label: Channel type
+    type: enum
+    options: [STANDARD, BASIC, ADVANCED_SD, ADVANCED_HD]
+    default: STANDARD
+    description: For create_channel. Decides the resolutions and bitrates the channel accepts and delivers, and its price.
+  - name: recording_configuration_arn
+    label: Recording configuration
+    type: string
+    description: For create_channel. ARN of an IVS recording configuration, to record every stream to S3. Leave empty for no recording.
+    example: arn:aws:ivs:eu-west-1:123456789012:recording-configuration/abcdABCDefgh
+  - name: metadata
+    label: Metadata
+    type: text
+    description: For put_metadata. The text to send to viewers with the video, at most 1 KB. Often JSON.
+    example: '{"cue": "goal", "minute": 63}'
+
+outputs:
+  - name: channel_arn
+    type: string
+    description: The channel's ARN.
+  - name: channel_name
+    type: string
+    description: The channel's name (create_channel).
+  - name: ingest_server
+    type: string
+    description: The RTMPS address an encoder sends to (create_channel).
+  - name: playback_url
+    type: string
+    description: The HLS address viewers play.
+  - name: stream_key_arn
+    type: string
+    description: ARN of the channel's stream key (create_channel). The key itself is a secret and is never returned.
+  - name: state
+    type: string
+    description: LIVE or OFFLINE. Empty for create_channel.
+  - name: health
+    type: string
+    description: The live stream's health, HEALTHY, STARVING or UNKNOWN (get_stream).
+  - name: viewer_count
+    type: integer
+    description: How many viewers are watching (get_stream).
+  - name: stream_id
+    type: string
+    description: The live stream's ID (get_stream).

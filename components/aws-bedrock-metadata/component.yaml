@@ -1,0 +1,91 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-bedrock-metadata
+displayName: Amazon Bedrock Metadata
+summary: Write a title, synopsis, keywords and chapters from a transcript, using a Bedrock model you choose.
+version: 1.0.0
+category: language
+tags: [aws, bedrock, metadata, synopsis, keywords, chapters]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 900
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [bedrock, s3]
+  policy: iam/policy.json
+
+inputs:
+  - name: transcript_uri
+    label: Transcript file
+    type: s3_uri
+    description: A plain text file or an Amazon Transcribe JSON. Set this or "Transcript text", not both.
+    example: "{{assets.Transcript.locator}}"
+  - name: text
+    label: Transcript text
+    type: text
+    description: The transcript itself. Set this or "Transcript file", not both.
+  - name: model_id
+    label: Model
+    type: string
+    required: true
+    description: The ID of a Bedrock model or inference profile that is enabled for your account and region.
+  - name: fields
+    label: Fields
+    type: list
+    default: [title, synopsis, keywords, chapters]
+    description: The metadata to write. Any of title, synopsis, keywords, chapters.
+  - name: language
+    label: Language
+    type: string
+    default: same as the transcript
+    description: The language to write the metadata in, such as English or Swedish.
+  - name: max_keywords
+    label: Maximum keywords
+    type: integer
+    default: 12
+    description: Upper bound on the number of keywords, 1 to 50.
+  - name: max_input_chars
+    label: Maximum transcript length
+    type: integer
+    default: 150000
+    description: A transcript longer than this many characters is cut, and the output says so.
+  - name: output_uri
+    label: Output folder
+    type: s3_uri
+    description: Optional. Folder the metadata is also written to, as a JSON file. Must end with a slash.
+    example: s3://acme-media-work/metadata/
+
+outputs:
+  - name: title
+    type: string
+    description: A short title.
+  - name: synopsis
+    type: text
+    description: A synopsis of 2 to 4 sentences.
+  - name: keywords
+    type: list
+    description: Keywords, the most important first.
+  - name: chapters
+    type: json
+    description: 'Chapters in order, each {"start": "HH:MM:SS", "title": "…"}. The start is empty when the transcript has no timings.'
+  - name: truncated
+    type: boolean
+    description: True when the transcript was longer than the maximum and was cut.
+  - name: metadata_uri
+    type: s3_uri
+    description: The metadata JSON file (only when an output folder is set).
+  - name: model_id
+    type: string
+    description: The model that wrote the metadata.

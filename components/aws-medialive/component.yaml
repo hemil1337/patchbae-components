@@ -1,0 +1,81 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-medialive
+displayName: AWS Elemental MediaLive
+summary: Start or stop a MediaLive channel, insert an ad break, or switch the channel to another input.
+version: 1.0.0
+category: live
+tags: [aws, medialive, live, channel, scte-35, ad-break, input-switch]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 1800
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [medialive]
+  policy: iam/policy.json
+
+inputs:
+  - name: channel_id
+    label: Channel ID
+    type: string
+    required: true
+    description: The MediaLive channel's ID, the number at the end of its ARN.
+    example: "1234567"
+  - name: action
+    label: Action
+    type: enum
+    options: [start_channel, stop_channel, insert_ad_break, switch_input]
+    required: true
+    description: What to do. Start or stop the channel, insert an ad break (SCTE-35 splice insert), or switch to another input.
+  - name: wait
+    label: Wait until done
+    type: boolean
+    default: true
+    description: For start_channel and stop_channel. Wait until the channel is running or idle before the node finishes.
+  - name: ad_break_seconds
+    label: Ad break length
+    type: number
+    description: For insert_ad_break. Length of the break in seconds. Leave empty for a break that lasts until a return to network.
+    example: 120
+  - name: input_attachment
+    label: Input attachment
+    type: string
+    description: For switch_input. Name of the input attachment on the channel to switch to.
+    example: studio-b
+  - name: start_time
+    label: Start time
+    type: string
+    description: For insert_ad_break and switch_input. When the action takes effect, as a UTC time such as 2026-11-25T19:30:00Z. Leave empty for immediately.
+    example: "2026-11-25T19:30:00Z"
+
+outputs:
+  - name: channel_id
+    type: string
+    description: The channel the action was applied to.
+  - name: channel_arn
+    type: string
+    description: The channel's ARN.
+  - name: channel_name
+    type: string
+    description: The channel's name.
+  - name: state
+    type: string
+    description: The channel's state when the node finished, such as RUNNING or IDLE.
+  - name: action_name
+    type: string
+    description: The name of the schedule action that was added (insert_ad_break and switch_input). Empty otherwise.
+  - name: action_time
+    type: string
+    description: When the schedule action takes effect, as a UTC time, or "immediate".

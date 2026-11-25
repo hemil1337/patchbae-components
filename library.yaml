@@ -1,0 +1,8 @@
+apiVersion: patchb.ae/v1
+kind: ComponentLibrary
+name: Patchbae components
+description: >-
+  Ready-made workflow nodes for media operations on AWS: live channels and
+  contribution, packaging and ad insertion, transcoding, rendering, speech to
+  text, video analysis, subtitle translation, voice-over and storage.
+license: Apache-2.0

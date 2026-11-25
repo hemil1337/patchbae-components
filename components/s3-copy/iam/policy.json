@@ -1,0 +1,32 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadSource",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:GetObjectTagging"],
+      "Resource": "arn:aws:s3:::<SOURCE_BUCKET>/<SOURCE_PREFIX>*"
+    },
+    {
+      "Sid": "DeleteSourceOnlyNeededForMove",
+      "Effect": "Allow",
+      "Action": ["s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::<SOURCE_BUCKET>/<SOURCE_PREFIX>*"
+    },
+    {
+      "Sid": "WriteAndCheckDestination",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:PutObjectTagging", "s3:GetObject", "s3:AbortMultipartUpload"],
+      "Resource": "arn:aws:s3:::<DESTINATION_BUCKET>/<DESTINATION_PREFIX>*"
+    },
+    {
+      "Sid": "ListBothBuckets",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": [
+        "arn:aws:s3:::<SOURCE_BUCKET>",
+        "arn:aws:s3:::<DESTINATION_BUCKET>"
+      ]
+    }
+  ]
+}

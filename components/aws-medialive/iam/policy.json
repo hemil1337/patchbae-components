@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadTheChannel",
+      "Effect": "Allow",
+      "Action": ["medialive:DescribeChannel", "medialive:DescribeSchedule"],
+      "Resource": "arn:aws:medialive:<REGION>:<ACCOUNT_ID>:channel:<CHANNEL_ID>"
+    },
+    {
+      "Sid": "StartAndStopTheChannel",
+      "Effect": "Allow",
+      "Action": ["medialive:StartChannel", "medialive:StopChannel"],
+      "Resource": "arn:aws:medialive:<REGION>:<ACCOUNT_ID>:channel:<CHANNEL_ID>"
+    },
+    {
+      "Sid": "AddScheduleActions",
+      "Effect": "Allow",
+      "Action": ["medialive:BatchUpdateSchedule"],
+      "Resource": "arn:aws:medialive:<REGION>:<ACCOUNT_ID>:channel:<CHANNEL_ID>"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-polly-voiceover
+displayName: Amazon Polly Voice-over
+summary: Turn text or SSML into a spoken audio file on S3 with an Amazon Polly voice.
+version: 1.0.0
+category: speech
+tags: [aws, polly, text-to-speech, voice-over, audio]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 3600
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [polly, s3]
+  policy: iam/policy.json
+
+inputs:
+  - name: text
+    label: Text
+    type: text
+    description: The words to speak. Set this or "Text file", not both.
+  - name: text_uri
+    label: Text file
+    type: s3_uri
+    description: A .txt or .ssml file with the words to speak. Set this or "Text", not both. An .ssml file is read as SSML.
+    example: s3://acme-media-work/scripts/trailer.txt
+  - name: voice_id
+    label: Voice
+    type: string
+    default: Joanna
+    description: The Polly voice, such as Joanna, Matthew or Elin. The voice decides the language and the accent.
+  - name: engine
+    label: Engine
+    type: enum
+    options: [neural, standard, long-form, generative]
+    default: neural
+    description: The Polly engine. Each voice supports some engines only, and not every engine is in every region.
+  - name: language_code
+    label: Language
+    type: string
+    description: Only for a voice that speaks two languages, to choose between them (for example en-IN or hi-IN). Leave empty otherwise.
+  - name: text_type
+    label: Text type
+    type: enum
+    options: [text, ssml]
+    default: text
+    description: Choose ssml when the text is SSML markup inside a speak element.
+  - name: output_format
+    label: Audio format
+    type: enum
+    options: [mp3, ogg_vorbis, pcm]
+    default: mp3
+    description: The format of the audio file. pcm is raw audio without a header.
+  - name: output_uri
+    label: Output folder
+    type: s3_uri
+    required: true
+    description: Folder the audio file is written to. Must end with a slash.
+    example: s3://acme-media-work/voice-over/
+
+outputs:
+  - name: audio_uri
+    type: s3_uri
+    description: The audio file.
+  - name: characters
+    type: integer
+    description: The number of characters Polly synthesized, which is what it bills.
+  - name: voice_id
+    type: string
+    description: The voice that was used.
+  - name: task_id
+    type: string
+    description: The Polly speech synthesis task, for looking it up in AWS.

@@ -1,0 +1,5 @@
+# What the library's tests import (python3 -m pytest, CI). The components
+# themselves pin their own dependencies in component.yaml.
+boto3==1.44.9
+pytest>=8
+pyyaml>=6

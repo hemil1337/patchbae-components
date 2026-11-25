@@ -1,0 +1,124 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-mediapackage
+displayName: AWS Elemental MediaPackage
+summary: Harvest a clip from a live MediaPackage channel to S3, or publish a file on S3 as a VOD asset with playback URLs.
+version: 1.0.0
+category: delivery
+tags: [aws, mediapackage, live-to-vod, harvest, vod, hls, dash, packaging]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 7200
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [mediapackagev2, mediapackage-vod]
+  policy: iam/policy.json
+
+inputs:
+  - name: action
+    label: Action
+    type: enum
+    options: [harvest_clip, publish_vod_asset]
+    required: true
+    description: Harvest a time range from a live channel to S3 (live to VOD), or publish a file on S3 as a VOD asset.
+  - name: channel_group
+    label: Channel group
+    type: string
+    description: For harvest_clip. Name of the MediaPackage channel group.
+    example: northlight-live
+  - name: channel
+    label: Channel
+    type: string
+    description: For harvest_clip. Name of the channel in the channel group.
+    example: sports-1
+  - name: origin_endpoint
+    label: Origin endpoint
+    type: string
+    description: For harvest_clip. Name of the origin endpoint to harvest from.
+    example: hls-cmaf
+  - name: hls_manifests
+    label: HLS manifests
+    type: list
+    description: For harvest_clip. Names of the endpoint's HLS manifests to harvest. Give at least one manifest of any kind.
+    example: [index]
+  - name: dash_manifests
+    label: DASH manifests
+    type: list
+    description: For harvest_clip. Names of the endpoint's DASH manifests to harvest.
+  - name: low_latency_hls_manifests
+    label: Low-latency HLS manifests
+    type: list
+    description: For harvest_clip. Names of the endpoint's low-latency HLS manifests to harvest.
+  - name: start_time
+    label: Start time
+    type: string
+    description: For harvest_clip. Where the clip starts, as a UTC time such as 2026-11-25T19:00:00Z. Must be inside the endpoint's startover window.
+    example: "2026-11-25T19:00:00Z"
+  - name: end_time
+    label: End time
+    type: string
+    description: For harvest_clip. Where the clip ends, as a UTC time. Must be after the start time and in the past.
+    example: "2026-11-25T21:00:00Z"
+  - name: output_uri
+    label: Output folder
+    type: s3_uri
+    description: For harvest_clip. Folder the harvested clip is written to. Must be a folder inside the bucket and end with a slash.
+    example: s3://acme-media-vod/harvest/cup-final/
+  - name: source_uri
+    label: Source file
+    type: s3_uri
+    description: For publish_vod_asset. The file to publish, an HLS playlist (.m3u8), a SMIL manifest (.smil) or an MP4. MediaPackage reads it straight from S3.
+    example: "{{assets.HLS.locator}}"
+  - name: packaging_group_id
+    label: Packaging group
+    type: string
+    description: For publish_vod_asset. ID of the MediaPackage VOD packaging group that decides the formats the asset is offered in.
+    example: northlight-vod
+  - name: source_role_arn
+    label: MediaPackage role
+    type: string
+    description: For publish_vod_asset. ARN of the IAM role MediaPackage itself assumes to read the source file. An ARN, not a credential.
+    example: arn:aws:iam::123456789012:role/MediaPackageVodRole
+  - name: asset_id
+    label: Asset ID
+    type: string
+    description: For publish_vod_asset. ID for the asset. Leave empty for one named after the task. An asset with this ID is reused.
+    example: cup-final-2026
+
+outputs:
+  - name: job_name
+    type: string
+    description: The harvest job's name (harvest_clip).
+  - name: job_arn
+    type: string
+    description: The harvest job's ARN (harvest_clip).
+  - name: status
+    type: string
+    description: COMPLETED for a finished harvest, PLAYABLE for a published asset.
+  - name: output_uri
+    type: s3_uri
+    description: The folder the clip was harvested to (harvest_clip).
+  - name: asset_id
+    type: string
+    description: The VOD asset's ID (publish_vod_asset).
+  - name: asset_arn
+    type: string
+    description: The VOD asset's ARN (publish_vod_asset).
+  - name: playback_urls
+    type: json
+    description: 'One entry per packaging configuration, as a list of {"packaging_configuration_id", "url", "status"} (publish_vod_asset).'
+  - name: playback_url
+    type: string
+    description: The first playback URL, for a workflow with one packaging configuration (publish_vod_asset).

@@ -1,0 +1,68 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: s3-glacier-restore
+displayName: S3 Glacier Restore
+summary: Bring an archived file on S3 back from Glacier and wait until it can be read.
+version: 1.0.0
+category: storage
+tags: [aws, s3, glacier, deep-archive, restore, archive]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 21600
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [s3]
+  policy: iam/policy.json
+
+inputs:
+  - name: media_uri
+    label: Archived file
+    type: s3_uri
+    required: true
+    description: The object to restore. A file that is not archived passes straight through.
+    example: "{{assets.Original.locator}}"
+  - name: tier
+    label: Retrieval tier
+    type: enum
+    options: [Standard, Bulk, Expedited]
+    default: Standard
+    description: How fast and at what price the object comes back. Expedited is not available for Deep Archive.
+  - name: days
+    label: Days available
+    type: integer
+    default: 7
+    description: How many days the restored copy stays readable before S3 removes it again.
+  - name: wait
+    label: Wait until readable
+    type: boolean
+    default: true
+    description: Wait for the restore to finish, for at most 6 hours. Turn off for slower restores and check again later in the workflow.
+
+outputs:
+  - name: media_uri
+    type: s3_uri
+    description: The same object, for the next node to read.
+  - name: status
+    type: string
+    description: Either available (the object can be read now) or in_progress (the restore has been asked for).
+  - name: was_archived
+    type: boolean
+    description: False when the object was not in an archive class and nothing had to be done.
+  - name: storage_class
+    type: string
+    description: The object's storage class, for example GLACIER or DEEP_ARCHIVE.
+  - name: expires_at
+    type: string
+    description: When the restored copy goes away, as an ISO 8601 time. Empty while the restore runs and for objects that are not archived.

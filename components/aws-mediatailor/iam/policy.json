@@ -1,0 +1,21 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SetUpAdInsertion",
+      "Effect": "Allow",
+      "Action": ["mediatailor:GetPlaybackConfiguration", "mediatailor:PutPlaybackConfiguration"],
+      "Resource": "arn:aws:mediatailor:<REGION>:<ACCOUNT_ID>:playbackConfiguration/*"
+    },
+    {
+      "Sid": "ScheduleProgramsOnTheChannel",
+      "Effect": "Allow",
+      "Action": ["mediatailor:DescribeProgram", "mediatailor:CreateProgram"],
+      "Resource": [
+        "arn:aws:mediatailor:<REGION>:<ACCOUNT_ID>:channel/<CHANNEL_NAME>",
+        "arn:aws:mediatailor:<REGION>:<ACCOUNT_ID>:program/<CHANNEL_NAME>/*",
+        "arn:aws:mediatailor:<REGION>:<ACCOUNT_ID>:vodSource/<SOURCE_LOCATION_NAME>/*"
+      ]
+    }
+  ]
+}

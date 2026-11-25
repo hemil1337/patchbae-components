@@ -1,0 +1,81 @@
+apiVersion: patchb.ae/v1
+kind: Component
+name: aws-mediaconvert
+displayName: AWS Elemental MediaConvert
+summary: Transcode a media file on S3 to MP4 or HLS, or with one of your own MediaConvert job templates.
+version: 1.0.0
+category: transcode
+tags: [aws, mediaconvert, transcode, mp4, hls, proxy]
+logo: logo.svg
+license: Apache-2.0
+maintainers:
+  - name: Patchbae
+
+runtime:
+  language: python
+  entrypoint: src/main.py
+  handler: run
+  packages:
+    - boto3==1.35.99
+  timeoutSeconds: 21600
+  resources:
+    cpu: 250m
+    memory: 256Mi
+
+aws:
+  services: [mediaconvert, s3]
+  policy: iam/policy.json
+
+inputs:
+  - name: media_uri
+    label: Media file
+    type: s3_uri
+    required: true
+    description: The file to transcode. MediaConvert reads it straight from S3.
+    example: "{{assets.Original.locator}}"
+  - name: output_uri
+    label: Output folder
+    type: s3_uri
+    required: true
+    description: Folder the outputs are written to. Must end with a slash.
+    example: s3://acme-media-work/transcodes/
+  - name: mediaconvert_role_arn
+    label: MediaConvert service role
+    type: string
+    required: true
+    description: ARN of the IAM role MediaConvert itself assumes to read the media and write the outputs. An ARN, not a credential.
+    example: arn:aws:iam::123456789012:role/MediaConvertServiceRole
+  - name: preset
+    label: Preset
+    type: enum
+    options: [mp4_h264_1080p, mp4_h264_720p, hls_abr, job_template]
+    default: mp4_h264_1080p
+    description: What to produce. An MP4 at 1080p or 720p, an HLS ladder with three renditions, or whatever your own job template defines.
+  - name: job_template
+    label: Job template
+    type: string
+    description: Name of a MediaConvert job template in the same region. Required when the preset is job_template, and only used then.
+    example: acme-broadcast-mxf
+  - name: queue
+    label: Queue
+    type: string
+    description: Name or ARN of the MediaConvert queue to submit to. Leave empty for the default queue.
+  - name: name_modifier
+    label: Name modifier
+    type: string
+    description: Text added to the input's file name to form the output names. Leave empty for _1080p or _720p on the MP4 presets and nothing otherwise.
+    example: _proxy
+
+outputs:
+  - name: job_id
+    type: string
+    description: The MediaConvert job, for looking it up in the AWS console.
+  - name: output_uri
+    type: s3_uri
+    description: The folder the outputs were written to.
+  - name: output_uris
+    type: list
+    description: The files written, as S3 URIs. For HLS this is the master playlist.
+  - name: status
+    type: string
+    description: The job's final status. Always COMPLETE when the node succeeds.

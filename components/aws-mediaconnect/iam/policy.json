@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadTheFlow",
+      "Effect": "Allow",
+      "Action": ["mediaconnect:DescribeFlow"],
+      "Resource": "arn:aws:mediaconnect:<REGION>:<ACCOUNT_ID>:flow:<FLOW_ID>:<FLOW_NAME>"
+    },
+    {
+      "Sid": "StartAndStopTheFlow",
+      "Effect": "Allow",
+      "Action": ["mediaconnect:StartFlow", "mediaconnect:StopFlow"],
+      "Resource": "arn:aws:mediaconnect:<REGION>:<ACCOUNT_ID>:flow:<FLOW_ID>:<FLOW_NAME>"
+    }
+  ]
+}

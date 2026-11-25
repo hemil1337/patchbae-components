@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadStoredMediaOfTheStream",
+      "Effect": "Allow",
+      "Action": ["kinesisvideo:GetDataEndpoint", "kinesisvideo:GetClip", "kinesisvideo:GetImages"],
+      "Resource": "arn:aws:kinesisvideo:<REGION>:<ACCOUNT_ID>:stream/<STREAM_NAME>/*"
+    },
+    {
+      "Sid": "WriteClipsAndImages",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:AbortMultipartUpload"],
+      "Resource": "arn:aws:s3:::<OUTPUT_BUCKET>/<OUTPUT_PREFIX>*"
+    }
+  ]
+}
